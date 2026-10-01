@@ -1,0 +1,23 @@
+# Environments and secrets (never bake keys into an image)
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+.env
+.env.*
+!.env.example
+
+# Not needed at runtime
+.git
+.gitignore
+__pycache__/
+*.pyc
+.pytest_cache/
+tests/
+evaluation/results/
+docs/
+docker-compose*.yml
+*.md
+!README.md

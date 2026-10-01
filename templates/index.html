@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TripMate AI</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <div class="page-bg">
+    <div class="gradient-circle circle-1"></div>
+    <div class="gradient-circle circle-2"></div>
+    <div class="gradient-circle circle-3"></div>
+  </div>
+
+  <main class="app-container">
+    <section class="hero-section">
+      <div class="badge">
+        ✈️ TripMate AI — LangGraph, MCP, Supervisor, Guardrails & HITL
+      </div>
+      <h1>Plan Your Perfect Trip with AI</h1>
+      <p>
+        Search flights, discover hotels, check weather, assess your budget,
+        and review the AI-generated draft before the final itinerary is created.
+      </p>
+    </section>
+
+    <section class="planner-card">
+      <div class="card-header">
+        <div>
+          <h2>Where do you want to go?</h2>
+          <p>
+            Example: Plan a complete 7 days Japan trip from Bangladesh under 2 lakhs.
+          </p>
+        </div>
+        <div class="status-pill">
+          <span class="status-dot"></span>
+          Online
+        </div>
+      </div>
+
+      <div class="input-area">
+        <textarea
+          id="userInput"
+          placeholder="Plan a complete 7 days Japan trip including flights, hotels and sightseeing under 2 lakhs..."
+        ></textarea>
+        <button id="sendBtn" onclick="sendMessage()">
+          <span id="btnText">Generate Draft</span>
+          <span id="btnLoader" class="loader hidden"></span>
+        </button>
+      </div>
+
+      <div class="quick-prompts">
+        <button onclick="setPrompt('Plan a complete 7 days Japan trip from Bangladesh including flights, hotels and sightseeing under 2 lakhs.')">
+          Japan Trip
+        </button>
+        <button onclick="setPrompt('Plan a 5 days Dubai trip from Dhaka with flights, hotels and sightseeing.')">
+          Dubai Trip
+        </button>
+        <button onclick="setPrompt('Plan a 7 days Thailand trip from Bangladesh with budget hotels and sightseeing.')">
+          Thailand Trip
+        </button>
+        <button onclick="setPrompt('Give me all country flight info.')">
+          Global Flights
+        </button>
+      </div>
+
+      <div class="conversation-bar">
+        <span id="conversationInfo" class="conversation-info">
+          New conversation. Follow-up messages (for example “change the budget to 25,000”) reuse this trip.
+        </span>
+        <button id="newConversationBtn" class="link-btn" onclick="newConversation()">
+          Start new conversation
+        </button>
+      </div>
+    </section>
+
+    <section id="workflowSection" class="workflow-section hidden">
+      <div class="workflow-header">
+        <div>
+          <span class="eyebrow">Supervisor Agent</span>
+          <h2>Execution Plan</h2>
+        </div>
+        <span id="guardrailBadge" class="guardrail-badge">Guardrail passed</span>
+      </div>
+      <p id="supervisorReasoning" class="supervisor-reasoning"></p>
+      <div id="agentChips" class="agent-chips"></div>
+    </section>
+
+    <section id="dashboardSection" class="workflow-section dashboard-section hidden">
+      <div class="workflow-header">
+        <div>
+          <span class="eyebrow">Agent Execution Dashboard</span>
+          <h2>Workflow Status</h2>
+        </div>
+        <span id="workflowStatusBadge" class="guardrail-badge">-</span>
+      </div>
+      <div id="dashboardSummary" class="dashboard-summary"></div>
+      <ol id="dashboardStages" class="dashboard-stages"></ol>
+      <p class="dashboard-note">
+        Timings are measured on the server for this run. Stages that have not run are
+        shown as pending, not selected, or not run — nothing here is estimated.
+      </p>
+    </section>
+
+    <section id="resultSection" class="result-section hidden">
+      <div class="result-header">
+        <div>
+          <h2 id="resultTitle">Your AI Travel Plan</h2>
+          <p id="threadInfo">Thread ID: -</p>
+        </div>
+        <div class="result-actions">
+          <button class="copy-btn" onclick="copyResult()">Copy</button>
+          <button class="download-btn" onclick="downloadPDF()">Download PDF</button>
+        </div>
+      </div>
+
+      <div id="pdfContent" class="pdf-content">
+        <h1 class="pdf-title">AI Travel Plan</h1>
+        <div id="resultBox" class="result-box"></div>
+      </div>
+    </section>
+
+    <section id="approvalSection" class="approval-section hidden">
+      <div class="approval-icon">👤</div>
+      <div class="approval-content">
+        <span class="eyebrow">Human-in-the-Loop</span>
+        <h2>Review the draft itinerary</h2>
+        <p id="approvalRequest">
+          Approve the draft or provide feedback before the final plan is generated.
+        </p>
+
+        <textarea
+          id="approvalFeedback"
+          class="feedback-input"
+          placeholder="Add revision feedback, for example: reduce the hotel cost and add one free day..."
+        ></textarea>
+
+        <div class="approval-actions">
+          <button id="approveBtn" class="approve-btn" onclick="submitApproval(true)">
+            Approve & Generate Final
+          </button>
+          <button id="reviseBtn" class="revise-btn" onclick="submitApproval(false)">
+            Revise Using Feedback
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <section id="errorBox" class="error-box hidden"></section>
+  </main>
+
+  <footer>
+    Built with FastAPI, LangGraph, Groq, PostgreSQL, Redis, Tavily, AviationStack and MCP
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <script src="/static/script.js"></script>
+</body>
+</html>

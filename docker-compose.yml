@@ -1,0 +1,70 @@
+# TripMate AI: FastAPI app + PostgreSQL (LangGraph checkpoints) + Redis (weather cache).
+#
+#   cp .env.example .env      # then fill in the keys
+#   docker compose up --build
+#   open http://localhost:8000
+#
+# No secret is written in this file: every key comes from your .env / environment.
+name: tripmate
+
+services:
+  app:
+    build: .
+    ports:
+      - "${APP_PORT:-8000}:8000"
+    environment:
+      # ---- required ----------------------------------------------------------
+      GROQ_API_KEY: ${GROQ_API_KEY:?Set GROQ_API_KEY in .env}
+      TAVILY_API_KEY: ${TAVILY_API_KEY:?Set TAVILY_API_KEY in .env}
+      OPENWEATHER_API_KEY: ${OPENWEATHER_API_KEY:?Set OPENWEATHER_API_KEY in .env}
+      # Without this key the flight agent reports flights as unavailable; the rest still works.
+      AVIATION_STACK_API_KEY: ${AVIATION_STACK_API_KEY:-}
+      # ---- services in this compose file ------------------------------------
+      # sslmode=disable because this PostgreSQL container has no TLS (backend.py
+      # only appends sslmode=require when the URL does not set sslmode itself).
+      DATABASE_URL: postgresql://${POSTGRES_USER:-tripmate}:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}@postgres:5432/${POSTGRES_DB:-tripmate}?sslmode=disable
+      REDIS_URL: redis://redis:6379/0
+      # ---- optional tuning ----------------------------------------------------
+      WEATHER_CACHE_TTL_SECONDS: ${WEATHER_CACHE_TTL_SECONDS:-3600}
+      MCP_TIMEOUT_SECONDS: ${MCP_TIMEOUT_SECONDS:-60}
+      LLM_TIMEOUT_SECONDS: ${LLM_TIMEOUT_SECONDS:-60}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      # ---- optional LangSmith tracing (off unless you turn it on in .env) ----
+      LANGSMITH_TRACING: ${LANGSMITH_TRACING:-false}
+      LANGSMITH_API_KEY: ${LANGSMITH_API_KEY:-}
+      LANGSMITH_PROJECT: ${LANGSMITH_PROJECT:-tripmate-ai}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-tripmate}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: ${POSTGRES_DB:-tripmate}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    # Pure cache: nothing here needs to survive a restart.
+    command: ["redis-server", "--save", "", "--appendonly", "no"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+volumes:
+  pgdata:
